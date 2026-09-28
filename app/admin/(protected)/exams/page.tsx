@@ -5,11 +5,12 @@ import { AdminTabs } from "@/components/admin/admin-tabs";
 import { AdminTableShell, AdminTable, AdminEmptyRow, AdminTableLoading } from "@/components/admin/admin-table";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { TableSearchBar } from "@/components/admin/table-search-bar";
+import { LocalizedName } from "@/components/admin/localized-name";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { DeleteRowButton } from "@/components/admin/delete-row-button";
 import { Can } from "@/components/admin/can";
 import { connectDB } from "@/src/lib/mongodb";
-import { resolveListParams, type ListSearchParams } from "@/src/lib/api/list-params";
+import { localizedPair, resolveListParams, type ListSearchParams } from "@/src/lib/api/list-params";
 import { Exam } from "@/src/modules/exams/exam.model";
 
 const COLUMNS = ["Name", "Category", "Status"];
@@ -49,16 +50,22 @@ export default async function ExamsPage({
 }
 
 async function ExamsTable({ searchParams }: { searchParams: ListSearchParams }) {
-  const { q, page, limit, skip } = resolveListParams(searchParams);
+  const { q, page, limit, skip, lang } = resolveListParams(searchParams);
   await connectDB();
 
   const filter = q
-    ? { $or: [{ name: { $regex: q, $options: "i" } }, { slug: { $regex: q, $options: "i" } }] }
+    ? {
+        $or: [
+          { name: { $regex: q, $options: "i" } },
+          { nameTa: { $regex: q, $options: "i" } },
+          { slug: { $regex: q, $options: "i" } },
+        ],
+      }
     : {};
 
   const [exams, total] = await Promise.all([
     Exam.find(filter)
-      .populate("examCategoryId", "name")
+      .populate("examCategoryId", "name nameTa")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -76,13 +83,12 @@ async function ExamsTable({ searchParams }: { searchParams: ListSearchParams }) 
           exams.map((exam: any) => (
             <tr key={String(exam._id)}>
               <td className="px-4 py-3 font-medium">
-                <p>{exam.name}</p>
-                {exam.nameTa ? (
-                  <p className="text-sm font-normal text-muted-foreground">{exam.nameTa}</p>
-                ) : null}
+                <LocalizedName lang={lang} en={exam.name} ta={exam.nameTa} />
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {exam.examCategoryId?.name ?? "—"}
+                {exam.examCategoryId
+                  ? localizedPair(lang, exam.examCategoryId.name, exam.examCategoryId.nameTa).primary
+                  : "—"}
               </td>
               <td className="px-4 py-3">
                 <StatusBadge status={exam.status} />

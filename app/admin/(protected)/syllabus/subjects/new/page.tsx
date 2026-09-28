@@ -16,7 +16,7 @@ export default async function NewSubjectPage() {
       fields={[
         { kind: "text", name: "name", label: "Name (English)", placeholder: "e.g. Indian Polity" },
         { kind: "text", name: "nameTa", label: "Name (Tamil)", placeholder: "எ.கா. இந்திய அரசியல்" },
-        { kind: "select", name: "boardId", label: "Board", placeholder: "Select a board", options: parents.map((p) => ({ value: String(p._id), label: p.name })) },
+        { kind: "select", name: "boardId", label: "Subject", placeholder: "Select a subject", options: parents.map((p) => ({ value: String(p._id), label: p.name })) },
         { kind: "textarea", name: "description", label: "Description", placeholder: "Short description of this topic (optional)" },
         { kind: "textarea", name: "descriptionTa", label: "Description (Tamil)", placeholder: "இந்த தலைப்பின் சுருக்கமான விளக்கம் (விருப்பத்திற்குரியது)" },
         { kind: "select", name: "status", label: "Status", options: [{ value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }] },

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { SimpleEntityForm } from "@/components/admin/simple-entity-form";
 import { connectDB } from "@/src/lib/mongodb";
 import { ExamCategory } from "@/src/modules/exams/exam-category.model";
+import { EXAM_CATEGORY_TYPES } from "@/src/modules/exams/category-types";
 
 export default async function EditExamCategoryPage({
   params,
@@ -22,12 +23,19 @@ export default async function EditExamCategoryPage({
       initialValues={{
         name: category.name,
         nameTa: category.nameTa ?? "",
+        type: category.type ?? "others",
         status: category.status,
         sortOrder: category.sortOrder ?? 0,
       }}
       fields={[
         { kind: "text", name: "name", label: "Name", required: true },
         { kind: "text", name: "nameTa", label: "Name (Tamil)" },
+        {
+          kind: "select",
+          name: "type",
+          label: "Type",
+          options: EXAM_CATEGORY_TYPES.map((t) => ({ value: t.value, label: t.label })),
+        },
         { kind: "number", name: "sortOrder", label: "Sort order" },
         {
           kind: "select",

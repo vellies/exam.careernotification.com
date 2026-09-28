@@ -4,11 +4,12 @@ import { Pencil, ListChecks } from "lucide-react";
 import { AdminTableShell, AdminTable, AdminEmptyRow, AdminTableLoading } from "@/components/admin/admin-table";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { TableSearchBar } from "@/components/admin/table-search-bar";
+import { LocalizedName } from "@/components/admin/localized-name";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { DeleteRowButton } from "@/components/admin/delete-row-button";
 import { Can } from "@/components/admin/can";
 import { connectDB } from "@/src/lib/mongodb";
-import { resolveListParams, type ListSearchParams } from "@/src/lib/api/list-params";
+import { localizedPair, resolveListParams, type ListSearchParams } from "@/src/lib/api/list-params";
 import { Test } from "@/src/modules/tests/test.model";
 import { TestSeries } from "@/src/modules/test-series/test-series.model";
 
@@ -56,16 +57,16 @@ async function SeriesDescription({ testSeriesId }: { testSeriesId: string }) {
 
 async function TestsTable({ searchParams }: { searchParams: TestsSearchParams }) {
   const { testSeriesId } = searchParams;
-  const { q, page, limit, skip } = resolveListParams(searchParams);
+  const { q, page, limit, skip, lang } = resolveListParams(searchParams);
   await connectDB();
 
   const filter: Record<string, unknown> = testSeriesId ? { testSeriesId } : {};
-  if (q) filter.title = { $regex: q, $options: "i" };
+  if (q) filter.$or = [{ title: { $regex: q, $options: "i" } }, { titleTa: { $regex: q, $options: "i" } }];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [items, total]: [any[], number] = await Promise.all([
     Test.find(filter)
-      .populate("testSeriesId", "title")
+      .populate("testSeriesId", "title titleTa")
       .sort({ createdAt: 1 })
       .skip(skip)
       .limit(limit)
@@ -82,13 +83,12 @@ async function TestsTable({ searchParams }: { searchParams: TestsSearchParams })
           items.map((item) => (
             <tr key={String(item._id)}>
               <td className="px-4 py-3 font-medium">
-                <p>{item.title}</p>
-                {item.titleTa ? (
-                  <p className="text-sm font-normal text-muted-foreground">{item.titleTa}</p>
-                ) : null}
+                <LocalizedName lang={lang} en={item.title} ta={item.titleTa} />
               </td>
               <td className="px-4 py-3 text-muted-foreground">
-                {item.testSeriesId?.title ?? "—"}
+                {item.testSeriesId
+                  ? localizedPair(lang, item.testSeriesId.title, item.testSeriesId.titleTa).primary
+                  : "—"}
               </td>
               <td className="px-4 py-3 text-muted-foreground">
                 {item.questions?.length ?? 0}

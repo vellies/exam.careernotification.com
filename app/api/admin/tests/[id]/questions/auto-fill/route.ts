@@ -4,6 +4,7 @@ import { connectDB } from "@/src/lib/mongodb";
 import { requirePermission } from "@/src/lib/auth/guard";
 import { Test } from "@/src/modules/tests/test.model";
 import { Question } from "@/src/modules/questions/question.model";
+import { Subject } from "@/src/modules/syllabus/subject.model";
 import { autoFillTestQuestionsSchema } from "@/src/modules/tests/schemas";
 
 type Context = { params: Promise<{ id: string }> };
@@ -35,7 +36,8 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json({ error: "Test not found" }, { status: 404 });
   }
 
-  const { subjectId, difficulty, count, marks, negativeMarks } = parsed.data;
+  const { boardId, subjectId, difficulty, count, marks, negativeMarks } =
+    parsed.data;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const excludeIds = test.questions.map((q: any) => q.questionId);
@@ -43,10 +45,19 @@ export async function POST(request: Request, { params }: Context) {
     status: "published",
     _id: { $nin: excludeIds },
   };
+  // Filters are optional: a topic narrows to that topic, a syllabus alone
+  // narrows to every topic under it, and neither means the whole bank.
   try {
-    if (subjectId) filter.subjectId = new mongoose.Types.ObjectId(subjectId);
+    if (subjectId) {
+      filter.subjectId = new mongoose.Types.ObjectId(subjectId);
+    } else if (boardId) {
+      const topicIds = await Subject.find({
+        boardId: new mongoose.Types.ObjectId(boardId),
+      }).distinct("_id");
+      filter.subjectId = { $in: topicIds };
+    }
   } catch {
-    return NextResponse.json({ error: "Invalid syllabus filter" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid subject filter" }, { status: 400 });
   }
   if (difficulty) filter.difficulty = difficulty;
 

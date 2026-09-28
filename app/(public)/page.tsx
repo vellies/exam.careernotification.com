@@ -64,7 +64,7 @@ const PILLARS = [
     icon: GraduationCap,
     title: "6th–12th School Syllabus",
     description:
-      "Board and topic content that feeds directly into competitive-exam practice.",
+      "Subject and topic content that feeds directly into competitive-exam practice.",
   },
 ];
 

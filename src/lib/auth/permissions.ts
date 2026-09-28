@@ -14,7 +14,7 @@ export type Action = (typeof ACTIONS)[number];
  */
 export const RESOURCES = {
   exams: { label: "Exams & Categories", actions: ["create", "read", "update", "delete"] },
-  syllabus: { label: "Syllabus (Boards & Topics)", actions: ["create", "read", "update", "delete"] },
+  syllabus: { label: "Subjects & Topics", actions: ["create", "read", "update", "delete"] },
   questions: { label: "Question Bank & OCR", actions: ["create", "read", "update", "delete"] },
   testSeries: { label: "Test Series", actions: ["create", "read", "update", "delete"] },
   tests: { label: "Tests", actions: ["create", "read", "update", "delete"] },

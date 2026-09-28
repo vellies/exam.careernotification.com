@@ -21,7 +21,7 @@ import {
 } from "@/components/admin/bulk-selection";
 import { QuestionBulkActions } from "@/components/admin/question-bulk-actions";
 import { connectDB } from "@/src/lib/mongodb";
-import { resolveListParams, type ListSearchParams } from "@/src/lib/api/list-params";
+import { localizedPair, resolveListParams, type ListSearchParams } from "@/src/lib/api/list-params";
 import { Question } from "@/src/modules/questions/question.model";
 import { Subject } from "@/src/modules/syllabus/subject.model";
 import { Board } from "@/src/modules/syllabus/board.model";
@@ -104,7 +104,7 @@ async function SubjectFilter() {
 }
 
 async function QuestionsTable({ searchParams }: { searchParams: ListSearchParams }) {
-  const { q, page, limit, skip } = resolveListParams(searchParams);
+  const { q, page, limit, skip, lang } = resolveListParams(searchParams);
   const rawSubject = searchParams.subject;
   const subject = Array.isArray(rawSubject) ? rawSubject[0] : rawSubject;
   await connectDB();
@@ -124,7 +124,7 @@ async function QuestionsTable({ searchParams }: { searchParams: ListSearchParams
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [items, total]: [any[], number] = await Promise.all([
     Question.find(filter)
-      .populate("subjectId", "name")
+      .populate("subjectId", "name nameTa")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -143,72 +143,73 @@ async function QuestionsTable({ searchParams }: { searchParams: ListSearchParams
         {items.length === 0 ? (
           <AdminEmptyRow colSpan={7} label="No questions yet." />
         ) : (
-          items.map((item) => (
-            <tr key={String(item._id)}>
-              <td className="w-10 py-3 pr-0 pl-4">
-                <BulkSelectCheckbox
-                  id={String(item._id)}
-                  label={`Select question: ${item.question?.en || item.question?.ta || ""}`}
-                />
-              </td>
-              <td className="max-w-md px-4 py-3 font-medium">
-                <p className="truncate">
-                  {item.question?.en || item.question?.ta}
-                </p>
-                {item.question?.en && item.question?.ta ? (
-                  <p className="truncate text-sm font-normal text-muted-foreground">
-                    {item.question.ta}
-                  </p>
-                ) : null}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">
-                {item.subjectId?.name ?? "—"}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">{item.type}</td>
-              <td className="px-4 py-3 text-muted-foreground capitalize">
-                {item.difficulty}
-              </td>
-              <td className="px-4 py-3">
-                <StatusBadge status={item.status} />
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center justify-end gap-3">
-                  <QuestionPreviewButton
-                    question={{
-                      type: item.type,
-                      difficulty: item.difficulty,
-                      question: { en: item.question?.en, ta: item.question?.ta },
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      options: (item.options ?? []).map((o: any) => ({
-                        id: o.id,
-                        text: { en: o.text?.en, ta: o.text?.ta },
-                      })),
-                      correctAnswer: item.correctAnswer,
-                      explanation: {
-                        en: item.explanation?.en,
-                        ta: item.explanation?.ta,
-                      },
-                    }}
+          items.map((item) => {
+            const question = localizedPair(lang, item.question?.en, item.question?.ta);
+            return (
+              <tr key={String(item._id)}>
+                <td className="w-10 py-3 pr-0 pl-4">
+                  <BulkSelectCheckbox
+                    id={String(item._id)}
+                    label={`Select question: ${item.question?.en || item.question?.ta || ""}`}
                   />
-                  <Can resource="questions" action="update">
-                    <Link
-                      href={`/admin/questions/${item._id}`}
-                      className="text-muted-foreground hover:text-foreground"
-                      aria-label="Edit"
-                    >
-                      <Pencil className="size-4" />
-                    </Link>
-                  </Can>
-                  <Can resource="questions" action="delete">
-                    <DeleteRowButton
-                      resource="questions"
-                      id={String(item._id)}
+                </td>
+                <td className="max-w-md px-4 py-3 font-medium">
+                  <p className="truncate">{question.primary}</p>
+                  {question.secondary ? (
+                    <p className="truncate text-sm font-normal text-muted-foreground">
+                      {question.secondary}
+                    </p>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {item.subjectId ? localizedPair(lang, item.subjectId.name, item.subjectId.nameTa).primary : "—"}
+                </td>
+                <td className="px-4 py-3 text-muted-foreground">{item.type}</td>
+                <td className="px-4 py-3 text-muted-foreground capitalize">
+                  {item.difficulty}
+                </td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={item.status} />
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-3">
+                    <QuestionPreviewButton
+                      question={{
+                        type: item.type,
+                        difficulty: item.difficulty,
+                        question: { en: item.question?.en, ta: item.question?.ta },
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        options: (item.options ?? []).map((o: any) => ({
+                          id: o.id,
+                          text: { en: o.text?.en, ta: o.text?.ta },
+                        })),
+                        correctAnswer: item.correctAnswer,
+                        explanation: {
+                          en: item.explanation?.en,
+                          ta: item.explanation?.ta,
+                        },
+                      }}
                     />
-                  </Can>
-                </div>
-              </td>
-            </tr>
-          ))
+                    <Can resource="questions" action="update">
+                      <Link
+                        href={`/admin/questions/${item._id}`}
+                        className="text-muted-foreground hover:text-foreground"
+                        aria-label="Edit"
+                      >
+                        <Pencil className="size-4" />
+                      </Link>
+                    </Can>
+                    <Can resource="questions" action="delete">
+                      <DeleteRowButton
+                        resource="questions"
+                        id={String(item._id)}
+                      />
+                    </Can>
+                  </div>
+                </td>
+              </tr>
+            );
+          })
         )}
       </AdminTable>
       <AdminPagination page={page} limit={limit} total={total} searchParams={searchParams} />

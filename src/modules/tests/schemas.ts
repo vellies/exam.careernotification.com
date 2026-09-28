@@ -47,6 +47,7 @@ export const addTestQuestionSchema = z.object({
 });
 
 export const autoFillTestQuestionsSchema = z.object({
+  boardId: z.string().trim().min(1).optional(),
   subjectId: z.string().trim().min(1).optional(),
   difficulty: z.enum(["easy", "medium", "hard"]).optional(),
   count: z.coerce.number().int().positive().max(200),

@@ -7,6 +7,7 @@ import { connectDB } from "@/src/lib/mongodb";
 import { Test } from "@/src/modules/tests/test.model";
 import { TestSeries } from "@/src/modules/test-series/test-series.model";
 import { Subject } from "@/src/modules/syllabus/subject.model";
+import { Board } from "@/src/modules/syllabus/board.model";
 
 export default async function TestQuestionsPage({
   params,
@@ -15,9 +16,10 @@ export default async function TestQuestionsPage({
 }) {
   const { id } = await params;
   await connectDB();
-  const [test, subjects] = await Promise.all([
+  const [test, boards, subjects] = await Promise.all([
     Test.findById(id).populate("questions.questionId").lean(),
-    Subject.find({ status: "active" }).select("name").sort({ name: 1 }).lean(),
+    Board.find({ status: "active" }).select("name nameTa").sort({ name: 1 }).lean(),
+    Subject.find({ status: "active" }).select("name nameTa boardId").sort({ name: 1 }).lean(),
   ]);
   if (!test) notFound();
 
@@ -65,6 +67,7 @@ export default async function TestQuestionsPage({
         attached={JSON.parse(JSON.stringify(test.questions))}
         shuffleQuestions={Boolean(test.shuffleQuestions)}
         syllabus={{
+          boards: JSON.parse(JSON.stringify(boards)),
           subjects: JSON.parse(JSON.stringify(subjects)),
         }}
       />

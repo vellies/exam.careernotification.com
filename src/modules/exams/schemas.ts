@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { sluggableName, slugify, withSlugFrom } from "@/src/lib/slug";
+import { EXAM_CATEGORY_TYPE_VALUES } from "./category-types";
 
 export const examCategoryCreateSchema = z
   .object({
     name: sluggableName("Name"),
     nameTa: z.string().trim().optional().default(""),
+    type: z.enum(EXAM_CATEGORY_TYPE_VALUES).default("others"),
     sortOrder: z.coerce.number().optional().default(0),
     status: z.enum(["active", "inactive"]).default("active"),
   })
@@ -16,6 +18,7 @@ export const examCategoryCreateSchema = z
 export const examCategoryUpdateSchema = z.object({
   name: sluggableName("Name").optional(),
   nameTa: z.string().trim().optional(),
+  type: z.enum(EXAM_CATEGORY_TYPE_VALUES).optional(),
   sortOrder: z.coerce.number().optional(),
   status: z.enum(["active", "inactive"]).optional(),
 }).transform(withSlugFrom("name"));

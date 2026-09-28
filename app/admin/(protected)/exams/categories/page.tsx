@@ -3,16 +3,22 @@ import { AdminTabs } from "@/components/admin/admin-tabs";
 import { AdminTableShell, AdminTable, AdminEmptyRow, AdminTableLoading } from "@/components/admin/admin-table";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { TableSearchBar } from "@/components/admin/table-search-bar";
+import { LocalizedName } from "@/components/admin/localized-name";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { DeleteRowButton } from "@/components/admin/delete-row-button";
 import { Can } from "@/components/admin/can";
 import { connectDB } from "@/src/lib/mongodb";
-import { resolveListParams, type ListSearchParams } from "@/src/lib/api/list-params";
+import {
+  localizedSortField,
+  resolveListParams,
+  type ListSearchParams,
+} from "@/src/lib/api/list-params";
 import { ExamCategory } from "@/src/modules/exams/exam-category.model";
+import { examCategoryTypeLabel } from "@/src/modules/exams/category-types";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 
-const COLUMNS = ["Name", "Status"];
+const COLUMNS = ["Name", "Type", "Status"];
 
 export default async function ExamCategoriesPage({
   searchParams,
@@ -49,19 +55,27 @@ export default async function ExamCategoriesPage({
 }
 
 async function CategoriesTable({ searchParams }: { searchParams: ListSearchParams }) {
-  const { q, page, limit, skip } = resolveListParams(searchParams);
+  const { q, page, limit, skip, lang } = resolveListParams(searchParams);
   await connectDB();
 
   const filter = q
-    ? { $or: [{ name: { $regex: q, $options: "i" } }, { slug: { $regex: q, $options: "i" } }] }
+    ? {
+        $or: [
+          { name: { $regex: q, $options: "i" } },
+          { nameTa: { $regex: q, $options: "i" } },
+          { slug: { $regex: q, $options: "i" } },
+        ],
+      }
     : {};
 
   const [categories, total] = await Promise.all([
-    ExamCategory.find(filter)
-      .sort({ sortOrder: 1, name: 1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
+    ExamCategory.aggregate([
+      { $match: filter },
+      { $addFields: { sortName: localizedSortField(lang, "name", "nameTa") } },
+      { $sort: { sortOrder: 1, sortName: 1, _id: 1 } },
+      { $skip: skip },
+      { $limit: limit },
+    ]),
     ExamCategory.countDocuments(filter),
   ]);
 
@@ -69,15 +83,15 @@ async function CategoriesTable({ searchParams }: { searchParams: ListSearchParam
     <>
       <AdminTable columns={COLUMNS} startIndex={skip}>
         {categories.length === 0 ? (
-          <AdminEmptyRow colSpan={3} label="No exam categories yet." />
+          <AdminEmptyRow colSpan={4} label="No exam categories yet." />
         ) : (
           categories.map((c) => (
             <tr key={String(c._id)}>
               <td className="px-4 py-3 font-medium">
-                <p>{c.name}</p>
-                {c.nameTa ? (
-                  <p className="text-sm font-normal text-muted-foreground">{c.nameTa}</p>
-                ) : null}
+                <LocalizedName lang={lang} en={c.name} ta={c.nameTa} />
+              </td>
+              <td className="px-4 py-3 text-muted-foreground">
+                {examCategoryTypeLabel(c.type)}
               </td>
               <td className="px-4 py-3">
                 <StatusBadge status={c.status} />

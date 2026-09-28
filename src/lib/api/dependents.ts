@@ -33,7 +33,10 @@ const dep = (
  */
 const DEPENDENTS: Record<string, Dependent[]> = {
   ExamCategory: [dep(Exam, "examCategoryId", "exam")],
-  Exam: [dep(TestSeries, "examId", "test series", "test series")],
+  Exam: [
+    dep(TestSeries, "examId", "test series", "test series"),
+    dep(Board, "examId", "subject"),
+  ],
   TestSeries: [
     dep(Test, "testSeriesId", "test"),
     dep(Purchase, "testSeriesId", "purchase request"),

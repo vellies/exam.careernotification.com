@@ -7,6 +7,7 @@ export const boardCreateSchema = z
   .object({
     name: sluggableName("Name"),
     nameTa: z.string().trim().optional().default(""),
+    examId: z.string().trim().min(1, "Exam is required"),
     status: statusEnum.default("active"),
   })
   .transform((data) => ({ ...data, slug: slugify(data.name) }));
@@ -14,6 +15,7 @@ export const boardCreateSchema = z
 export const boardUpdateSchema = z.object({
   name: sluggableName("Name").optional(),
   nameTa: z.string().trim().optional(),
+  examId: z.string().trim().min(1, "Exam is required").optional(),
   status: statusEnum.optional(),
 }).transform(withSlugFrom("name"));
 
@@ -48,7 +50,7 @@ export const subjectCreateSchema = z
   .object({
     name: optionalEnglishName.optional().default(""),
     nameTa: z.string().trim().optional().default(""),
-    boardId: z.string().trim().min(1, "Board is required"),
+    boardId: z.string().trim().min(1, "Subject is required"),
     description: z.string().trim().optional().default(""),
     descriptionTa: z.string().trim().optional().default(""),
     status: statusEnum.default("active"),

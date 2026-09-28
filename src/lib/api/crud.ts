@@ -51,10 +51,12 @@ export function crudHandlers<
     }
 
     // Any other query param is treated as a plain equality filter, e.g.
-    // ?status=published or ?testSeriesId=<id>.
-    for (const [key, value] of searchParams.entries()) {
+    // ?status=published or ?testSeriesId=<id>. A repeated param matches any of
+    // its values, e.g. ?subjectId=a&subjectId=b.
+    for (const key of new Set(searchParams.keys())) {
       if (["page", "limit", "q"].includes(key)) continue;
-      filter[key] = value;
+      const values = searchParams.getAll(key);
+      filter[key] = values.length > 1 ? { $in: values } : values[0];
     }
 
     let query = model

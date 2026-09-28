@@ -15,7 +15,7 @@ import { TopicQuestionDialog } from "@/components/admin/topic-question-dialog";
 import { getAdminAccess } from "@/src/lib/auth/guard";
 import { can } from "@/src/lib/auth/permissions";
 import { connectDB } from "@/src/lib/mongodb";
-import { resolveListParams, type ListSearchParams } from "@/src/lib/api/list-params";
+import { localizedPair, resolveListParams, type ListSearchParams } from "@/src/lib/api/list-params";
 import { Question } from "@/src/modules/questions/question.model";
 import { Subject } from "@/src/modules/syllabus/subject.model";
 
@@ -94,7 +94,7 @@ async function TopicQuestionsTable({
   topicId: string;
   searchParams: ListSearchParams;
 }) {
-  const { q, page, limit, skip } = resolveListParams(searchParams);
+  const { q, page, limit, skip, lang } = resolveListParams(searchParams);
   await connectDB();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,74 +118,77 @@ async function TopicQuestionsTable({
         {items.length === 0 ? (
           <AdminEmptyRow colSpan={5} label="No questions in this topic yet." />
         ) : (
-          items.map((item) => (
-            <tr key={String(item._id)}>
-              <td className="max-w-md px-4 py-3 font-medium">
-                <p className="truncate">{item.question?.en || item.question?.ta}</p>
-                {item.question?.en && item.question?.ta ? (
-                  <p className="truncate text-sm font-normal text-muted-foreground">
-                    {item.question.ta}
-                  </p>
-                ) : null}
-              </td>
-              <td className="px-4 py-3 text-muted-foreground">{item.type}</td>
-              <td className="px-4 py-3 text-muted-foreground capitalize">{item.difficulty}</td>
-              <td className="px-4 py-3">
-                <StatusBadge status={item.status} />
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center justify-end gap-3">
-                  <QuestionPreviewButton
-                    question={{
-                      type: item.type,
-                      difficulty: item.difficulty,
-                      question: { en: item.question?.en, ta: item.question?.ta },
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      options: (item.options ?? []).map((o: any) => ({
-                        id: o.id,
-                        text: { en: o.text?.en, ta: o.text?.ta },
-                      })),
-                      correctAnswer: item.correctAnswer,
-                      explanation: { en: item.explanation?.en, ta: item.explanation?.ta },
-                    }}
-                  />
-                  <Can resource="questions" action="update">
-                    <TopicQuestionDialog
-                      topicId={topicId}
+          items.map((item) => {
+            const question = localizedPair(lang, item.question?.en, item.question?.ta);
+            return (
+              <tr key={String(item._id)}>
+                <td className="max-w-md px-4 py-3 font-medium">
+                  <p className="truncate">{question.primary}</p>
+                  {question.secondary ? (
+                    <p className="truncate text-sm font-normal text-muted-foreground">
+                      {question.secondary}
+                    </p>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3 text-muted-foreground">{item.type}</td>
+                <td className="px-4 py-3 text-muted-foreground capitalize">{item.difficulty}</td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={item.status} />
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-3">
+                    <QuestionPreviewButton
                       question={{
-                        id: String(item._id),
-                        initial: {
-                          type: item.type,
-                          questionEn: item.question?.en ?? "",
-                          questionTa: item.question?.ta ?? "",
-                          options: item.options?.length
-                            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              item.options.map((o: any) => ({
-                                id: o.id,
-                                text: { en: o.text?.en ?? "", ta: o.text?.ta ?? "" },
-                              }))
-                            : [
-                                { id: "A", text: { en: "", ta: "" } },
-                                { id: "B", text: { en: "", ta: "" } },
-                              ],
-                          correctAnswer: item.correctAnswer ?? "",
-                          explanationEn: item.explanation?.en ?? "",
-                          explanationTa: item.explanation?.ta ?? "",
-                          difficulty: item.difficulty,
-                          subjectId: topicId,
-                          tags: (item.tags ?? []).join(", "),
-                          status: item.status,
-                        },
+                        type: item.type,
+                        difficulty: item.difficulty,
+                        question: { en: item.question?.en, ta: item.question?.ta },
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        options: (item.options ?? []).map((o: any) => ({
+                          id: o.id,
+                          text: { en: o.text?.en, ta: o.text?.ta },
+                        })),
+                        correctAnswer: item.correctAnswer,
+                        explanation: { en: item.explanation?.en, ta: item.explanation?.ta },
                       }}
                     />
-                  </Can>
-                  <Can resource="questions" action="delete">
-                    <DeleteRowButton resource="questions" id={String(item._id)} />
-                  </Can>
-                </div>
-              </td>
-            </tr>
-          ))
+                    <Can resource="questions" action="update">
+                      <TopicQuestionDialog
+                        topicId={topicId}
+                        question={{
+                          id: String(item._id),
+                          initial: {
+                            type: item.type,
+                            questionEn: item.question?.en ?? "",
+                            questionTa: item.question?.ta ?? "",
+                            options: item.options?.length
+                              ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                item.options.map((o: any) => ({
+                                  id: o.id,
+                                  text: { en: o.text?.en ?? "", ta: o.text?.ta ?? "" },
+                                }))
+                              : [
+                                  { id: "A", text: { en: "", ta: "" } },
+                                  { id: "B", text: { en: "", ta: "" } },
+                                ],
+                            correctAnswer: item.correctAnswer ?? "",
+                            explanationEn: item.explanation?.en ?? "",
+                            explanationTa: item.explanation?.ta ?? "",
+                            difficulty: item.difficulty,
+                            subjectId: topicId,
+                            tags: (item.tags ?? []).join(", "),
+                            status: item.status,
+                          },
+                        }}
+                      />
+                    </Can>
+                    <Can resource="questions" action="delete">
+                      <DeleteRowButton resource="questions" id={String(item._id)} />
+                    </Can>
+                  </div>
+                </td>
+              </tr>
+            );
+          })
         )}
       </AdminTable>
       <AdminPagination page={page} limit={limit} total={total} searchParams={searchParams} />

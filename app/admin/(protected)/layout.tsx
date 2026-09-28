@@ -55,8 +55,7 @@ function buildAdminNav(access: AdminAccess) {
     },
     {
       resource: "syllabus",
-      href: "/admin/syllabus/subjects",
-      alsoActiveFor: ["/admin/syllabus"],
+      href: "/admin/syllabus",
       label: "Syllabus",
       icon: <BookMarked className={ICON_CLASS} strokeWidth={1.75} />,
     },
