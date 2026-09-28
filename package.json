@@ -1,0 +1,48 @@
+{
+  "name": "test.careernotification.com",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "create-admin": "node scripts/create-admin.mjs",
+    "promote-super-admin": "node scripts/promote-super-admin.mjs",
+    "seed:sample": "node scripts/seed-sample-data.mjs",
+    "reset:group4": "node scripts/reset-to-group4-only.mjs",
+    "add:group2": "node scripts/add-group2-series.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "@base-ui/react": "^1.8.0",
+    "bcryptjs": "^3.0.3",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.4.0",
+    "jose": "^6.2.12",
+    "lucide-react": "^1.47.0",
+    "mongoose": "^9.10.1",
+    "next": "16.3.5",
+    "nodemailer": "^10.0.10",
+    "pdfjs-dist": "^6.3.289",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "shadcn": "^4.21.0",
+    "tesseract.js": "^7.0.0",
+    "tw-animate-css": "^1.4.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^18.0.3",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.5",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
